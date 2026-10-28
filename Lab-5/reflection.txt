@@ -1,0 +1,17 @@
+Lab 5 - Reflection
+
+1. Which issues were the easiest to fix and which were the hardest?
+
+The easiest were the style ones like the unused import, == None, long lines, the missing newline and the docstrings, because the tool tells you exactly what to change. The hardest was eval(). Bandit only says not to use it, so I had to decide what the function should do instead. I changed it to take a number as the rate instead of a formula string, which meant changing the function call in main() as well. The mutable default argument also needed a bit of thought because the log needed somewhere else to live.
+
+2. Did the tools report any false positives?
+
+Not really. Some findings were low priority, like the random module warning (B311) and the unused loop variable, but they were easy to fix so I fixed them anyway. What I noticed more was the opposite: some real problems were not flagged at all. The hardcoded access key being printed, the cost showing 1344.0000000000002, and main() running when the file is imported were all found by reading and running the code.
+
+3. How would you use these tools in a real project?
+
+I would run Flake8 and Pylint before every commit using a pre-commit hook, and run all three in CI on every pull request. A Bandit high or medium finding or a low Pylint score would fail the build. If a warning is acceptable it can be skipped with a comment explaining why, so it is visible in review.
+
+4. What improvements did you see after the fixes?
+
+Pylint went from 5.19 to 10.00, Bandit from 5 issues to 0 and Flake8 from 11 warnings to 0. The code is also safer now (no eval, no shell command, no hardcoded key, stronger hash and token) and behaves more predictably (no shared default list, no hidden errors, clean cost output). It is easier to read and to import because of the docstrings, the naming and the main guard.

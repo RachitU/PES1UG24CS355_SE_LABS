@@ -1,0 +1,38 @@
+Lab 5 - Static Code Analysis
+File: hospital_patient_system.py
+
+Results
+Pylint: 5.19/10 before, 10.00/10 after
+Bandit: 5 issues before (2 High, 1 Medium, 2 Low), 0 after
+Flake8: 11 warnings before, 0 after
+
+Line numbers are from the original file.
+
+Issue | Type | Line(s) | Description | Fix Approach
+------|------|---------|-------------|-------------
+eval() used (Bandit B307, Medium) | Security | 40 | eval runs whatever string is passed in, so anyone could run their own code | Removed eval. The function now takes a number (rate) and returns base_bill * rate
+os.system with filename (Bandit B605, High) | Security | 56 | filename is added into a shell command, so shell injection is possible | Removed it and used print() instead
+MD5 hash (Bandit B324, High) | Security | 45 | md5 is a weak hash | Changed to sha256
+random for token (Bandit B311, Low) | Security | 49 | random module is predictable | Used secrets.randbelow(9000) + 1000
+Bare except with pass (Bandit B110, Flake8 E722, Pylint W0702) | Bug | 22-25 | catches every error and hides it, and an unknown patient is silently ignored | Check if p_id exists first and return True or False
+Hardcoded access key (not flagged by tools) | Security | 68, 77 | secret is written in the code and also printed | Read it from the NURSE_ACCESS_KEY environment variable and stopped printing it
+Mutable default argument (Pylint W0102) | Bug | 13 | intake_log=[] is shared across calls | Default is None, uses a module level INTAKE_LOG
+Float output 1344.0000000000002 (not flagged by tools) | Bug | 72 | cost is not rounded | Used round(..., 2)
+File opened without with (Pylint R1732, W1514) | Bug | 53-55 | file may stay open if write fails, no encoding given | Used with open(..., encoding="utf-8")
+main() runs on import (not flagged by tools) | Design | 80 | the demo runs as soon as the file is imported | Added if __name__ == "__main__":
+Unused import and variables (Flake8 F401, F841, Pylint W0611, W0612) | Quality | 4, 29, 39, 61 | math, bed_charge and p are never used | Removed them (base_bill is now used)
+Comparison to None with == (Flake8 E711, Pylint C0121) | Style | 30 | should use is None | Changed to is None
+Unneeded if/else returning True/False (Pylint R1703, R1705) | Quality | 32-35 | longer than it needs to be | Replaced with one return statement
+Parameter hides global variable (Pylint W0621) | Quality | 59 | patient_records parameter has the same name as the global | Renamed the parameter to records
+Function name admitPatient (Pylint C0103) | Style | 13 | not snake_case | Renamed to admit_patient
+% string formatting (Pylint C0209) | Style | 17 | can be an f-string | Changed to an f-string
+Missing docstrings (Pylint C0114, C0116) | Style | whole file | module and all 9 functions had none | Added short docstrings
+Lines too long (Flake8 E501) | Style | 7-9, 16, 72 | more than 79 characters | Split the lines
+No newline at end of file (Flake8 W292, Pylint C0304) | Style | 80 | last line has no newline | Added one
+
+Commits
+1. Fix Bandit findings
+2. Fix Flake8 findings
+3. Fix Pylint findings
+
+Reports before and after are in the reports folder (before and after).
