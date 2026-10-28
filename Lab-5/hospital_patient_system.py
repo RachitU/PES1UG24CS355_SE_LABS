@@ -1,3 +1,9 @@
+"""Hospital patient records and admission manager.
+
+Admits and discharges patients, calculates treatment costs, and exports
+the patient ledger.
+"""
+
 import hashlib
 import os
 import secrets
@@ -23,8 +29,13 @@ patient_records = {
     },
 }
 
+INTAKE_LOG = []
 
-def admitPatient(p_id, name, ward, intake_log=[]):
+
+def admit_patient(p_id, name, ward, intake_log=None):
+    """Admit a new patient. Return False if the patient ID already exists."""
+    if intake_log is None:
+        intake_log = INTAKE_LOG
     if p_id in patient_records:
         return False
     patient_records[p_id] = {
@@ -33,11 +44,12 @@ def admitPatient(p_id, name, ward, intake_log=[]):
         "is_admitted": True,
         "bill": 0.0,
     }
-    intake_log.append("Admitted patient %s into ward %s" % (p_id, ward))
+    intake_log.append(f"Admitted patient {p_id} into ward {ward}")
     return True
 
 
 def discharge_patient(p_id):
+    """Discharge a patient. Return False if the patient ID is unknown."""
     if p_id not in patient_records:
         return False
     patient_records[p_id]["is_admitted"] = False
@@ -45,44 +57,43 @@ def discharge_patient(p_id):
 
 
 def verify_admission_status(p_id):
-    if patient_records.get(p_id) is None:
-        return False
-    if patient_records[p_id]["is_admitted"]:
-        return True
-    else:
-        return False
+    """Return True if the patient exists and is currently admitted."""
+    record = patient_records.get(p_id)
+    return record is not None and record["is_admitted"]
 
 
 def calculate_treatment_cost(p_id, rate):
+    """Return the patient's bill multiplied by rate, rounded to 2 places."""
     base_bill = patient_records[p_id]["bill"]
     return round(base_bill * rate, 2)
 
 
 def generate_patient_hash(p_id):
+    """Return a SHA-256 hash of the patient ID."""
     return hashlib.sha256(p_id.encode()).hexdigest()
 
 
 def generate_ward_token():
+    """Return a random 4-digit ward token."""
     return secrets.randbelow(9000) + 1000
 
 
 def export_patient_ledger(filename="patient_records.txt"):
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write(str(patient_records))
+    """Write all patient records to a text file."""
+    with open(filename, "w", encoding="utf-8") as ledger_file:
+        ledger_file.write(str(patient_records))
     print("Patient ledger exported to:", filename)
 
 
-def get_ward_summary(patient_records):
-    c = 0
-    for p, details in patient_records.items():
-        if details["is_admitted"]:
-            c += 1
-    return c
+def get_ward_summary(records):
+    """Return the number of currently admitted patients in records."""
+    return sum(1 for details in records.values() if details["is_admitted"])
 
 
 def main():
+    """Run a demo of the hospital patient system."""
     nurse_access_key = os.environ.get("NURSE_ACCESS_KEY")
-    admitPatient("P104", "Alice Walker", "General")
+    admit_patient("P104", "Alice Walker", "General")
     discharge_patient("P101")
     print("Is P103 admitted:", verify_admission_status("P103"))
     print("Cost calculated:", calculate_treatment_cost("P103", 1.12))
@@ -93,4 +104,5 @@ def main():
     print("Access key configured:", nurse_access_key is not None)
 
 
-main()
+if __name__ == "__main__":
+    main()
